@@ -7,16 +7,23 @@ import matplotlib.pyplot as plt
 from scipy.stats import skew
 from time import time as tnow
 
+numberOfRepeats = 10000
+numberOfTimeSteps = 1000
+x0 = np.zeros((numberOfRepeats, 1))
+kb = 20
+kd = 1
+
+def analsimplebd(x,t):
+    lambt = kb/kd*(1-math.exp(-kd*t))
+    p = math.exp(-lambt)*math.pow(lambt, x)/math.factorial(x)
+    return p
+
 if __name__ == "__main__":
-    numberOfRepeats = 1000
-    numberOfTimeSteps = 10000
-    x0 = np.zeros((numberOfRepeats, 1))
-    kb = 20
-    kd = 1
     time = np.zeros((numberOfRepeats, numberOfTimeSteps))
     x = np.zeros((numberOfRepeats, numberOfTimeSteps))
     x[:, 0] = x0[:, 0]
     v = np.array([-1, 1])
+# ii)
     print("Modeling {} Events".format(numberOfRepeats*numberOfTimeSteps))
     tstart = tnow()
     for t in list(range(0, numberOfTimeSteps))[1:]:
@@ -33,6 +40,7 @@ if __name__ == "__main__":
     print("Modeling took {} seconds, at {} models/second".format(deltat, numberOfTimeSteps*numberOfRepeats/deltat))
 
 
+#iii)
     # Model Solutions
     plt.figure(1)
     plt.title("Gillespie Model")
@@ -79,8 +87,24 @@ if __name__ == "__main__":
     plt.plot(difAvg)
     plt.plot(difVar)
     plt.plot(difSkw)
+#iv)
+    time_pnts = [0.5, 1, 1.5, 2, 2.5]
+    allpnts=[]
+    for t in time_pnts:
+        ensemble_pnts = []
+        for mem in range(0,numberOfRepeats):
+            diff = np.array([abs(timeval-t) for timeval in time[mem,:]])
+            ensemble_pnts.append(np.where(diff == diff.min()))
+        allpnts.append(ensemble_pnts)
+    plt.figure(9)
+    plt.title("Time evolution of modeled birth death distribution")
+    plt.ylabel("Count")
+    plt.xlabel("Value")
+    for t in range(0, len(time_pnts)):
+        plt.hist([a[0][0] for a in allpnts[t]], bins=100)
+    print("Val of close: {}".format(allpnts))
 
-
+#v)
     # Modeling Autocorrelation
     auto = []
     for i in range(1, numberOfTimeSteps):
@@ -92,12 +116,14 @@ if __name__ == "__main__":
     plt.plot(auto)
     plt.plot(analAuto)
 
+#vi)
     # Ensemble Avg vs Time average
     selec = 0
     timeAvg = np.mean(x[selec,:])
     ensemAvg = np.mean(x[:, -1])
     print("Time Average:{}, Ensemble Average:{}".format(timeAvg, ensemAvg))
 
+#vii)
     # Gather first pass process data
     thresh = 18
     cross = []
